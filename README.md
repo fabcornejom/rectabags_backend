@@ -1,2 +1,2 @@
 # rectabags_backend
-el backend del repo
+el backend de reactabags
