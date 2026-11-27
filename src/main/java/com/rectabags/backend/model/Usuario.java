@@ -34,13 +34,14 @@ public class Usuario {
     @Column(length = 20)
     private String telefono;
 
-    @Column(nullable = false, length = 30)
+    // Opcionales: se piden en el Checkout, no al registrarse
+    @Column(length = 30)
     private String region;
 
-    @Column(nullable = false, length = 30)
+    @Column(length = 30)
     private String comuna;
 
-    @Column(nullable = false, length = 120)
+    @Column(length = 120)
     private String direccion;
 
     @Enumerated(EnumType.STRING)
