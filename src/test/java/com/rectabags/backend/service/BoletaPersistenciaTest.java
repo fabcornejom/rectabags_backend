@@ -40,6 +40,7 @@ import jakarta.persistence.EntityManager;
  * Cada prueba revierte su transaccion, incluidos sus datos ficticios.
  */
 @SpringBootTest
+@org.springframework.test.context.ActiveProfiles("test")
 @Transactional
 class BoletaPersistenciaTest {
 

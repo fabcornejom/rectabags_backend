@@ -26,6 +26,7 @@ import com.rectabags.backend.security.JwtUtil;
 import com.rectabags.backend.service.BoletaService;
 
 @SpringBootTest
+@org.springframework.test.context.ActiveProfiles("test")
 @Transactional
 class BoletaSeguridadTest {
     @Autowired private WebApplicationContext context;

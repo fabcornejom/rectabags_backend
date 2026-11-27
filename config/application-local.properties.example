@@ -1,0 +1,5 @@
+# Copiar como config/application-local.properties (ignorado por Git).
+# Completar con las credenciales propias; no reutilizar valores de otros equipos.
+# También se pueden proporcionar DB_PASSWORD y JWT_SECRET como variables de entorno.
+# DB_PASSWORD=
+# JWT_SECRET=

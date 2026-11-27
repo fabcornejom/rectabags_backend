@@ -32,3 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 node_modules/
+
+# Credenciales particulares de cada entorno
+/config/application-local.properties
+/config/application-local.properties.next
