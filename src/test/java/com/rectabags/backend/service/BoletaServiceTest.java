@@ -26,6 +26,7 @@ import com.rectabags.backend.model.Producto;
 import com.rectabags.backend.repository.BoletaRepository;
 import com.rectabags.backend.repository.DetalleBoletaRepository;
 import com.rectabags.backend.repository.ProductoRepository;
+import com.rectabags.backend.repository.UsuarioRepository;
 
 @ExtendWith(MockitoExtension.class)
 class BoletaServiceTest {
@@ -33,12 +34,13 @@ class BoletaServiceTest {
     @Mock private BoletaRepository boletas;
     @Mock private DetalleBoletaRepository detalles;
     @Mock private ProductoRepository productos;
+    @Mock private UsuarioRepository usuarios;
 
     private BoletaService service;
 
     @BeforeEach
     void preparar() {
-        service = new BoletaService(boletas, detalles, productos);
+        service = new BoletaService(boletas, detalles, productos, usuarios);
     }
 
     @Test

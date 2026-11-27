@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.AccessDeniedException;
 
 import com.rectabags.backend.dto.BoletaDTO;
 import com.rectabags.backend.dto.CompraRequest;
@@ -21,6 +22,8 @@ import com.rectabags.backend.model.Producto;
 import com.rectabags.backend.repository.BoletaRepository;
 import com.rectabags.backend.repository.DetalleBoletaRepository;
 import com.rectabags.backend.repository.ProductoRepository;
+import com.rectabags.backend.repository.UsuarioRepository;
+import com.rectabags.backend.exception.RecursoNoEncontradoException;
 
 @Service
 public class BoletaService {
@@ -28,16 +31,24 @@ public class BoletaService {
     private final BoletaRepository boletaRepository;
     private final DetalleBoletaRepository detalleRepository;
     private final ProductoRepository productoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     public BoletaService(BoletaRepository boletaRepository,
-            DetalleBoletaRepository detalleRepository, ProductoRepository productoRepository) {
+            DetalleBoletaRepository detalleRepository, ProductoRepository productoRepository,
+            UsuarioRepository usuarioRepository) {
         this.boletaRepository = boletaRepository;
         this.detalleRepository = detalleRepository;
         this.productoRepository = productoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Transactional
     public BoletaDTO crearCompra(CompraRequest request) {
+        return crearCompra(request, null);
+    }
+
+    @Transactional
+    public BoletaDTO crearCompra(CompraRequest request, Long idUsuario) {
         Map<Long, Integer> cantidades = agruparCantidades(request.items());
         List<DetalleBoleta> detalles = new ArrayList<>();
         List<Producto> productos = new ArrayList<>();
@@ -70,6 +81,10 @@ public class BoletaService {
         }
 
         Boleta boleta = crearBoletaInvitado(request, total);
+        if (idUsuario != null) {
+            boleta.setUsuario(usuarioRepository.findById(idUsuario)
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado.")));
+        }
         boletaRepository.save(boleta);
 
         for (DetalleBoleta detalle : detalles) {
@@ -80,7 +95,40 @@ public class BoletaService {
         productoRepository.saveAll(productos);
         List<DetalleBoleta> guardados = detalleRepository.saveAll(detalles);
 
-        return new BoletaDTO(boleta.getIdBoleta(), boleta.getFolio(), null,
+        return aDTO(boleta, guardados);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BoletaDTO> listar() {
+        return boletaRepository.findAllByOrderByFechaEmisionDescIdBoletaDesc().stream()
+                .map(this::conDetalles).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<BoletaDTO> historial(Long idUsuario) {
+        return boletaRepository.findByUsuarioIdUsuarioOrderByFechaEmisionDescIdBoletaDesc(idUsuario)
+                .stream().map(this::conDetalles).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public BoletaDTO obtener(Long id, Long idUsuario, boolean accesoPersonal) {
+        Boleta boleta = boletaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Boleta no encontrada."));
+        boolean esDueno = boleta.getUsuario() != null
+                && boleta.getUsuario().getIdUsuario().equals(idUsuario);
+        if (!accesoPersonal && !esDueno) {
+            throw new AccessDeniedException("No tienes permiso para consultar esta boleta.");
+        }
+        return conDetalles(boleta);
+    }
+
+    private BoletaDTO conDetalles(Boleta boleta) {
+        return aDTO(boleta, detalleRepository.findByBoletaIdBoletaOrderByIdDetalleBoletaAsc(boleta.getIdBoleta()));
+    }
+
+    private BoletaDTO aDTO(Boleta boleta, List<DetalleBoleta> guardados) {
+        return new BoletaDTO(boleta.getIdBoleta(), boleta.getFolio(),
+                boleta.getUsuario() == null ? null : boleta.getUsuario().getIdUsuario(),
                 boleta.getNombreCliente(), boleta.getApellidoCliente(), boleta.getCorreoCliente(),
                 boleta.getTelefonoCliente(), boleta.getDireccionCliente(), boleta.getRegion(),
                 boleta.getComuna(), boleta.getMetodoPago(), boleta.getSubtotal(), boleta.getTotal(),

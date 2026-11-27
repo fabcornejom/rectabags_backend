@@ -43,12 +43,12 @@ class BoletaControllerTest {
     void compraValidaRespondeCreadoEnLaRutaVersionada() throws Exception {
         mvc.perform(post("/api/v1/boletas").contentType(MediaType.APPLICATION_JSON).content(COMPRA_VALIDA))
                 .andExpect(status().isCreated());
-        verify(service).crearCompra(any(CompraRequest.class));
+        verify(service).crearCompra(any(CompraRequest.class), isNull());
     }
 
     @Test
     void faltaStockResponde400ConMensajeDelProducto() throws Exception {
-        when(service.crearCompra(any())).thenThrow(new IllegalArgumentException("Stock insuficiente para Mochila."));
+        when(service.crearCompra(any(), isNull())).thenThrow(new IllegalArgumentException("Stock insuficiente para Mochila."));
 
         mvc.perform(post("/api/v1/boletas").contentType(MediaType.APPLICATION_JSON).content(COMPRA_VALIDA))
                 .andExpect(status().isBadRequest())
