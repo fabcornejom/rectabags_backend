@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.rectabags.backend.dto.BoletaDTO;
 import com.rectabags.backend.dto.CompraRequest;
+import com.rectabags.backend.dto.CambioEstadoRequest;
+import org.springframework.web.bind.annotation.PatchMapping;
 import com.rectabags.backend.service.BoletaService;
 
 import jakarta.validation.Valid;
@@ -42,6 +44,11 @@ public class BoletaController {
     @GetMapping
     public List<BoletaDTO> listar() {
         return boletaService.listar();
+    }
+
+    @PatchMapping("/{id}/estado")
+    public BoletaDTO cambiarEstado(@PathVariable Long id, @Valid @RequestBody CambioEstadoRequest request) {
+        return boletaService.cambiarEstado(id, request.estado());
     }
 
     @GetMapping("/mias")

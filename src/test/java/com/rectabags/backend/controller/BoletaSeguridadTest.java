@@ -72,6 +72,69 @@ class BoletaSeguridadTest {
     }
 
     @Test
+    void soloAdminCambiaEstadoYCancelarDosVecesNoDuplicaStock() throws Exception {
+        Long id = compra(cliente.getIdUsuario());
+        String ruta = "/api/v1/boletas/" + id + "/estado";
+        for (Usuario usuario : List.of(cliente, vendedor)) {
+            mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(ruta)
+                    .header("Authorization", token(usuario)).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"estado\":\"CANCELADA\"}")).andExpect(status().isForbidden());
+        }
+        for (int intento = 0; intento < 2; intento++) {
+            mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(ruta)
+                    .header("Authorization", token(admin)).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"estado\":\"CANCELADA\"}"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.estado").value("CANCELADA"));
+            org.junit.jupiter.api.Assertions.assertEquals(5, productos.findById(producto.getIdProducto()).orElseThrow().getStock());
+        }
+    }
+
+    @Test
+    void validaEstadosYRechazaSaltosYReactivaciones() throws Exception {
+        Long id = compra(null);
+        String ruta = "/api/v1/boletas/" + id + "/estado";
+        for (String json : List.of("{}", "{\"estado\":\"INVENTADO\"}", "{\"estado\":\"ENTREGADA\"}")) {
+            mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(ruta)
+                    .header("Authorization", token(admin)).contentType(MediaType.APPLICATION_JSON).content(json))
+                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.mensaje").isNotEmpty());
+        }
+        for (String estado : List.of("PAGADA", "ENVIADA", "ENTREGADA")) {
+            mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(ruta)
+                    .header("Authorization", token(admin)).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"estado\":\"" + estado + "\"}"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.estado").value(estado));
+        }
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(ruta)
+                .header("Authorization", token(admin)).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"estado\":\"CANCELADA\"}")).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void resumenYCierreSonSoloAdminYCierrePreservaHistorial() throws Exception {
+        Long id = compra(cliente.getIdUsuario());
+        for (Usuario usuario : List.of(cliente, vendedor)) {
+            mvc.perform(get("/api/v1/reportes/resumen").header("Authorization", token(usuario)))
+                    .andExpect(status().isForbidden());
+            mvc.perform(post("/api/v1/reportes/cierre").header("Authorization", token(usuario)))
+                    .andExpect(status().isForbidden());
+        }
+        mvc.perform(get("/api/v1/reportes/resumen").header("Authorization", token(admin)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.cantidadOrdenes").value(1))
+                .andExpect(jsonPath("$.totalVentas").value(1000.50));
+        mvc.perform(post("/api/v1/reportes/cierre").header("Authorization", token(admin)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.cantidadCerradas").value(1));
+        mvc.perform(post("/api/v1/reportes/cierre").header("Authorization", token(admin)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.cantidadCerradas").value(0));
+        mvc.perform(get("/api/v1/reportes/resumen").header("Authorization", token(admin)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.cantidadOrdenes").value(0));
+        mvc.perform(get("/api/v1/boletas/mias").header("Authorization", token(cliente)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].fechaCierre").isNotEmpty());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/v1/boletas/" + id + "/estado")
+                .header("Authorization", token(admin)).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"estado\":\"PAGADA\"}")).andExpect(status().isBadRequest());
+    }
+
+    @Test
     void clienteNoPuedeListarTodasLasOrdenes() throws Exception {
         mvc.perform(get("/api/v1/boletas").header("Authorization", token(cliente)))
                 .andExpect(status().isForbidden());

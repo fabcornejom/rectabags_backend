@@ -169,6 +169,43 @@ class BoletaServiceTest {
         when(detalles.saveAll(anyList())).thenAnswer(invocacion -> invocacion.getArgument(0));
     }
 
+    @Test
+    void cancelarCompraPagadaDevuelveStockUnaSolaVezYConservaPreciosHistoricos() {
+        Boleta boleta = new Boleta();
+        boleta.setIdBoleta(10L);
+        boleta.setEstado(EstadoBoleta.PAGADA);
+        Producto producto = producto(1L, "Nombre actual", "2000", 3);
+        DetalleBoleta detalle = new DetalleBoleta();
+        detalle.setProducto(producto);
+        detalle.setCantidad(2);
+        detalle.setNombreProducto("Nombre historico");
+        detalle.setPrecioUnidad(new BigDecimal("1000"));
+        detalle.setSubTotal(new BigDecimal("2000"));
+        when(boletas.findById(10L)).thenReturn(Optional.of(boleta));
+        when(detalles.findByBoletaIdBoletaOrderByIdDetalleBoletaAsc(10L)).thenReturn(List.of(detalle));
+
+        BoletaDTO respuesta = service.cambiarEstado(10L, EstadoBoleta.CANCELADA);
+        service.cambiarEstado(10L, EstadoBoleta.CANCELADA);
+
+        assertEquals(5, producto.getStock());
+        assertEquals(EstadoBoleta.CANCELADA, respuesta.estado());
+        assertEquals("Nombre historico", respuesta.detalles().get(0).nombreProducto());
+        assertEquals(new BigDecimal("1000"), respuesta.detalles().get(0).precioUnidad());
+        verify(productos, times(1)).saveAll(anyList());
+        verify(boletas, times(1)).save(boleta);
+    }
+
+    @Test
+    void boletaCerradaNoPermiteCambiarEstadoNiModificarStock() {
+        Boleta boleta = new Boleta();
+        boleta.setEstado(EstadoBoleta.PENDIENTE);
+        boleta.setFechaCierre(java.time.LocalDateTime.now());
+        when(boletas.findById(10L)).thenReturn(Optional.of(boleta));
+        assertThrows(IllegalArgumentException.class, () -> service.cambiarEstado(10L, EstadoBoleta.CANCELADA));
+        verifyNoInteractions(productos, detalles);
+        verify(boletas, never()).save(any());
+    }
+
     private Producto producto(Long id, String nombre, String precio, int stock) {
         Producto producto = new Producto();
         producto.setIdProducto(id);

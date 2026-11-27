@@ -126,6 +126,39 @@ public class BoletaService {
         return aDTO(boleta, detalleRepository.findByBoletaIdBoletaOrderByIdDetalleBoletaAsc(boleta.getIdBoleta()));
     }
 
+    @Transactional
+    public BoletaDTO cambiarEstado(Long id, EstadoBoleta nuevoEstado) {
+        Boleta boleta = boletaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Boleta no encontrada."));
+        if (boleta.getFechaCierre() != null) {
+            throw new IllegalArgumentException("La boleta pertenece a un periodo cerrado.");
+        }
+        if (nuevoEstado == null) throw new IllegalArgumentException("El estado es obligatorio.");
+        if (boleta.getEstado() == nuevoEstado) return conDetalles(boleta);
+        boolean permitido = switch (boleta.getEstado()) {
+            case PENDIENTE -> nuevoEstado == EstadoBoleta.PAGADA || nuevoEstado == EstadoBoleta.CANCELADA;
+            case PAGADA -> nuevoEstado == EstadoBoleta.ENVIADA || nuevoEstado == EstadoBoleta.CANCELADA;
+            case ENVIADA -> nuevoEstado == EstadoBoleta.ENTREGADA;
+            case ENTREGADA, CANCELADA -> false;
+        };
+        if (!permitido) throw new IllegalArgumentException("No se permite cambiar de "
+                + boleta.getEstado() + " a " + nuevoEstado + ".");
+        List<DetalleBoleta> detalles = detalleRepository
+                .findByBoletaIdBoletaOrderByIdDetalleBoletaAsc(id);
+        if (nuevoEstado == EstadoBoleta.CANCELADA) {
+            List<Producto> productos = new ArrayList<>();
+            for (DetalleBoleta detalle : detalles) {
+                Producto producto = detalle.getProducto();
+                producto.setStock(Math.addExact(producto.getStock(), detalle.getCantidad()));
+                productos.add(producto);
+            }
+            productoRepository.saveAll(productos);
+        }
+        boleta.setEstado(nuevoEstado);
+        boletaRepository.save(boleta);
+        return aDTO(boleta, detalles);
+    }
+
     private BoletaDTO aDTO(Boleta boleta, List<DetalleBoleta> guardados) {
         return new BoletaDTO(boleta.getIdBoleta(), boleta.getFolio(),
                 boleta.getUsuario() == null ? null : boleta.getUsuario().getIdUsuario(),
