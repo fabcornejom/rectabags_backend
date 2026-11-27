@@ -28,6 +28,11 @@ desde pgAdmin o psql. La migración permite omitir región, comuna y dirección,
 como el registro actual, sin borrar datos ni ampliar columnas. En bases nuevas,
 las entidades ya definen estos campos como opcionales.
 
+Para actualizar los máximos de bases anteriores al instructivo, ejecutar
+`sql/migraciones/20261127_limites_instructivo.sql`: descripción de producto
+hasta 500 caracteres, apellido de usuario/boleta hasta 100 y dirección hasta
+300. Las ampliaciones conservan los datos y región/comuna siguen en 30.
+
 ## Pruebas
 
 Ejecutar `./mvnw.cmd test` con PostgreSQL disponible y `DB_PASSWORD` configurada.

@@ -23,9 +23,6 @@ import com.rectabags.backend.util.RunUtil;
 @Service
 public class UsuarioService {
 
-    private static final List<String> DOMINIOS_PERMITIDOS =
-            List.of("@duoc.cl", "@profesor.duoc.cl", "@gmail.com");
-
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -231,10 +228,7 @@ public class UsuarioService {
             throw new NegocioException("El correo no puede superar los 100 caracteres.");
         }
 
-        boolean dominioPermitido = DOMINIOS_PERMITIDOS.stream().anyMatch(correo::endsWith);
-        boolean tieneArroba = correo.indexOf('@') > 0;
-
-        if (!tieneArroba || !dominioPermitido) {
+        if (!correo.matches("^[^\\s@]+@(duoc\\.cl|profesor\\.duoc\\.cl|gmail\\.com)$")) {
             throw new NegocioException(
                     "El correo debe ser @duoc.cl, @profesor.duoc.cl o @gmail.com.");
         }
@@ -251,8 +245,8 @@ public class UsuarioService {
         if (!hayTexto(req.apellido())) {
             throw new NegocioException("El apellido es obligatorio.");
         }
-        if (req.apellido().trim().length() > 50) {
-            throw new NegocioException("El apellido no puede superar los 50 caracteres.");
+        if (req.apellido().trim().length() > 100) {
+            throw new NegocioException("El apellido no puede superar los 100 caracteres.");
         }
     }
 
@@ -281,8 +275,8 @@ public class UsuarioService {
         if (largo(req.telefono()) > 20) {
             throw new NegocioException("El teléfono no puede superar los 20 caracteres.");
         }
-        if (largo(req.direccion()) > 120) {
-            throw new NegocioException("La dirección no puede superar los 120 caracteres.");
+        if (largo(req.direccion()) > 300) {
+            throw new NegocioException("La dirección no puede superar los 300 caracteres.");
         }
         if (largo(req.region()) > 30 || largo(req.comuna()) > 30) {
             throw new NegocioException("La región y la comuna no pueden superar los 30 caracteres.");

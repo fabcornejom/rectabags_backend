@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Size;
 public record CompraRequest(
         @NotBlank(message = "El nombre es obligatorio.") @Size(max = 50)
         String nombreCliente,
-        @NotBlank(message = "El apellido es obligatorio.") @Size(max = 50)
+        @NotBlank(message = "El apellido es obligatorio.") @Size(max = 100)
         String apellidoCliente,
         @NotBlank(message = "El correo es obligatorio.") @Email @Size(max = 100)
         @Pattern(regexp = "(?i)^[^\\s@]+@(gmail\\.com|duoc\\.cl|profesor\\.duoc\\.cl)$",
@@ -23,7 +23,7 @@ public record CompraRequest(
         @Pattern(regexp = "^(?:\\+?56\\s*)?9(?:\\s*\\d){8}$",
                 message = "Ingresa un celular chileno válido de 9 dígitos.")
         String telefonoCliente,
-        @NotBlank(message = "La dirección es obligatoria.") @Size(max = 120)
+        @NotBlank(message = "La dirección es obligatoria.") @Size(max = 300)
         String direccionCliente,
         @NotBlank(message = "La región es obligatoria.") @Size(max = 30)
         String region,

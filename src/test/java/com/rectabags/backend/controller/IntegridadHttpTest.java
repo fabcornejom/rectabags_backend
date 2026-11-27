@@ -110,6 +110,19 @@ class IntegridadHttpTest {
     }
 
     @Test
+    void productoAdmiteNombreCortoPrecioCeroYDescripcion500EnLaBaseReal() throws Exception {
+        Categoria categoria = categorias.save(new Categoria(null, "Maximo " + UUID.randomUUID(), "Prueba temporal"));
+        String json = """
+                {"codigo":"%s","nombre":"AB","precio":0,"descripcion":"%s",
+                 "stock":1,"stockCritico":0,"idCategoria":%d}
+                """.formatted("MAX-" + UUID.randomUUID().toString().substring(0, 8), "a".repeat(500), categoria.getIdCategoria());
+        mvc.perform(post("/api/v1/productos").header("Authorization", tokenAdmin())
+                        .contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.precio").value(0))
+                .andExpect(jsonPath("$.nombre").value("AB")).andExpect(jsonPath("$.descripcion").value("a".repeat(500)));
+    }
+
+    @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void limiteNumericoDePostgresResponde400YElTokenSigueValido() throws Exception {
         Categoria categoria = categorias.save(new Categoria(null, "Limite " + UUID.randomUUID(), "Prueba temporal"));

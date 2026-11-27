@@ -65,4 +65,15 @@ class CompraRequestTest {
         return new CompraRequest("Marco", "Carrasco", correo, telefono, "Av. Principal 123", region,
                 "Santiago", "transferencia", List.of(new ItemCompraDTO(1L, cantidad)));
     }
+
+    @Test
+    void limitesAutorizadosDeApellidoYDireccionSeValidanEnLaCompra() {
+        CompraRequest limite = new CompraRequest("Marco", "a".repeat(100), "cliente@gmail.com", "912345678",
+                "d".repeat(300), "Región Metropolitana", "Santiago", "transferencia", List.of(new ItemCompraDTO(1L, 1)));
+        assertTrue(validator.validate(limite).isEmpty());
+        assertFalse(validator.validate(new CompraRequest("Marco", "a".repeat(101), limite.correoCliente(),
+                limite.telefonoCliente(), limite.direccionCliente(), limite.region(), limite.comuna(), limite.metodoPago(), limite.items())).isEmpty());
+        assertFalse(validator.validate(new CompraRequest("Marco", limite.apellidoCliente(), limite.correoCliente(),
+                limite.telefonoCliente(), "d".repeat(301), limite.region(), limite.comuna(), limite.metodoPago(), limite.items())).isEmpty());
+    }
 }

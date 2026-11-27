@@ -130,9 +130,9 @@ public class ProductoService {
             throw new IllegalArgumentException("El nombre no puede superar 100 caracteres.");
         }
 
-        // Descripción: opcional, máx. 200
-        if (datos.descripcion() != null && datos.descripcion().length() > 200) {
-            throw new IllegalArgumentException("La descripción no puede superar 200 caracteres.");
+        // Descripción: opcional, máx. 500
+        if (datos.descripcion() != null && datos.descripcion().length() > 500) {
+            throw new IllegalArgumentException("La descripción no puede superar 500 caracteres.");
         }
 
         // Precio: requerido, mínimo 0 (puede tener decimales)

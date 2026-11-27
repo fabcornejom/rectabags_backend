@@ -67,6 +67,35 @@ class UsuarioServiceTest {
         return u;
     }
 
+    @Test
+    void registrar_rechazaCorreoConMasDeUnaArroba() {
+        UsuarioRequest datos = new UsuarioRequest("123456785", "Ana", "Perez", "a@@gmail.com", "Clave123",
+                "912345678", null, null, null, Rol.CLIENTE);
+        assertThrows(NegocioException.class, () -> usuarioService.registrar(datos));
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    void registrar_aceptaApellido100YDireccion300() {
+        when(passwordEncoder.encode("Clave123")).thenReturn("HASH");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
+        UsuarioRequest datos = new UsuarioRequest("123456785", "Ana", "a".repeat(100), "ana@gmail.com", "Clave123",
+                "912345678", null, null, "d".repeat(300), Rol.CLIENTE);
+        UsuarioDTO resultado = usuarioService.registrar(datos);
+        assertEquals(100, resultado.apellido().length());
+        assertEquals(300, resultado.direccion().length());
+    }
+
+    @Test
+    void registrar_rechazaLosCaracteresQueExcedenLosMaximos() {
+        for (UsuarioRequest datos : java.util.List.of(
+                new UsuarioRequest("123456785", "Ana", "a".repeat(101), "ana@gmail.com", "Clave123", "912345678", null, null, "Calle 1", Rol.CLIENTE),
+                new UsuarioRequest("123456785", "Ana", "Perez", "ana@gmail.com", "Clave123", "912345678", null, null, "d".repeat(301), Rol.CLIENTE))) {
+            assertThrows(NegocioException.class, () -> usuarioService.registrar(datos));
+        }
+        verify(usuarioRepository, never()).save(any());
+    }
+
     // ---------------- crear ----------------
 
     @Test

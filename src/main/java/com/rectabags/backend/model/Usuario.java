@@ -22,7 +22,7 @@ public class Usuario {
     @Column(nullable = false, length = 50)
     private String nombre;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 100)
     private String apellido;
 
     @Column(nullable = false, unique = true, length = 100)
@@ -41,7 +41,7 @@ public class Usuario {
     @Column(length = 30)
     private String comuna;
 
-    @Column(length = 120)
+    @Column(length = 300)
     private String direccion;
 
     @Enumerated(EnumType.STRING)

@@ -29,7 +29,7 @@ public class Boleta {
     @Column(name = "nombre_cliente", nullable = false, length = 50)
     private String nombreCliente;
 
-    @Column(name = "apellido_cliente", nullable = false, length = 50)
+    @Column(name = "apellido_cliente", nullable = false, length = 100)
     private String apellidoCliente;
 
     @Column(name = "correo_cliente", nullable = false, length = 100)
@@ -38,7 +38,7 @@ public class Boleta {
     @Column(name = "telefono_cliente", nullable = false, length = 20)
     private String telefonoCliente;
 
-    @Column(name = "direccion_cliente", nullable = false, length = 120)
+    @Column(name = "direccion_cliente", nullable = false, length = 300)
     private String direccionCliente;
 
     @Column(nullable = false, length = 30)
