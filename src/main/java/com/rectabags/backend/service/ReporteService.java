@@ -63,9 +63,10 @@ public class ReporteService {
         }
         List<ProductoVendido> ranking = new ArrayList<>(porProducto.values());
         ranking.sort(Comparator.comparingLong(ProductoVendido::unidades).reversed());
-        // El reporte anterior redondea el ticket al peso chileno más cercano.
+        // Indicador de gestión: ventas / compras, con dos decimales al final.
+        // El redondeo de pagos en efectivo no corresponde a este promedio.
         BigDecimal ticket = ordenes == 0 ? BigDecimal.ZERO
-                : total.divide(BigDecimal.valueOf(ordenes), 0, RoundingMode.HALF_UP);
+                : total.divide(BigDecimal.valueOf(ordenes), 2, RoundingMode.HALF_UP);
         return new ResumenDTO(ordenes, total, unidades, ticket,
                 ranking.isEmpty() ? null : ranking.get(0), ranking, porEstado);
     }

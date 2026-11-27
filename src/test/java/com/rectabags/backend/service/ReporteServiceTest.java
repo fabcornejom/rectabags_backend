@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import com.rectabags.backend.dto.BoletaDTO;
 import com.rectabags.backend.dto.ResumenDTO;
@@ -62,7 +64,7 @@ class ReporteServiceTest {
         ResumenDTO resumen = reportes.resumen();
         assertEquals(2, resumen.cantidadOrdenes());
         assertEquals(new BigDecimal("3001.00"), resumen.totalVentas());
-        assertEquals(new BigDecimal("1501"), resumen.ticketPromedio());
+        assertEquals(new BigDecimal("1500.50"), resumen.ticketPromedio());
         assertEquals(5, resumen.unidadesVendidas());
         assertEquals("Bolso", resumen.productoMasVendido().nombre());
         assertEquals(3, resumen.productoMasVendido().unidades());
@@ -80,7 +82,36 @@ class ReporteServiceTest {
         assertEquals(1, resumen.rankingProductos().size());
         assertEquals(3, resumen.productoMasVendido().unidades());
         assertEquals(new BigDecimal("1700"), resumen.productoMasVendido().total());
-        assertEquals(new BigDecimal("850"), resumen.ticketPromedio());
+        assertEquals(new BigDecimal("850.00"), resumen.ticketPromedio());
+    }
+
+    @Test
+    void unaCompraConservaSusDecimalesEnElPromedio() {
+        when(boletas.listar()).thenReturn(List.of(
+                boleta("1000.50", EstadoBoleta.PAGADA, null, detalle(1L, "Producto", 1, "1000.50"))));
+        ResumenDTO resumen = reportes.resumen();
+        assertEquals(new BigDecimal("1000.50"), resumen.ticketPromedio());
+        assertEquals(new BigDecimal("1000.50"), resumen.totalVentas());
+    }
+
+    @Test
+    void comprasEnPesosEnterosPuedenTenerUnPromedioFraccionario() {
+        when(boletas.listar()).thenReturn(List.of(
+                boleta("1000", EstadoBoleta.PAGADA, null, detalle(1L, "Producto", 1, "1000")),
+                boleta("1001", EstadoBoleta.PAGADA, null, detalle(1L, "Producto", 1, "1001"))));
+        assertEquals(new BigDecimal("1000.50"), reportes.resumen().ticketPromedio());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"10.00,3,3.33", "10.01,2,5.01", "10.01,3,3.34", "10.00,2,5.00"})
+    void redondeaSoloElResultadoFinalADosDecimales(String total, int compras, String esperado) {
+        when(boletas.listar()).thenReturn(java.util.stream.IntStream.range(0, compras)
+                .mapToObj(i -> boleta(i == 0 ? total : "0.00", EstadoBoleta.PAGADA, null,
+                        detalle(1L, "Producto", 1, i == 0 ? total : "0.00"))).toList());
+        ResumenDTO resumen = reportes.resumen();
+        assertEquals(new BigDecimal(total), resumen.totalVentas());
+        assertEquals(compras, resumen.cantidadOrdenes());
+        assertEquals(new BigDecimal(esperado), resumen.ticketPromedio());
     }
 
     private BoletaDTO.DetalleDTO detalle(Long id, String nombre, int cantidad, String total) {

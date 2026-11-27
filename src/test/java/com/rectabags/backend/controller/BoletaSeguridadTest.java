@@ -121,7 +121,8 @@ class BoletaSeguridadTest {
         }
         mvc.perform(get("/api/v1/reportes/resumen").header("Authorization", token(admin)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.cantidadOrdenes").value(1))
-                .andExpect(jsonPath("$.totalVentas").value(1000.50));
+                .andExpect(jsonPath("$.totalVentas").value(1000.50))
+                .andExpect(jsonPath("$.ticketPromedio").value(1000.50));
         mvc.perform(post("/api/v1/reportes/cierre").header("Authorization", token(admin)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.cantidadCerradas").value(1));
         mvc.perform(post("/api/v1/reportes/cierre").header("Authorization", token(admin)))
