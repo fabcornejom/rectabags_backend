@@ -22,6 +22,12 @@ Revisar también URL y usuario de la base en `src/main/resources/application.pro
 Desde esta carpeta, ejecutar `./mvnw.cmd spring-boot:run` y abrir
 `http://localhost:8080/swagger-ui/index.html`.
 
+Si la base se creó con la versión que exigía ubicación al registrarse,
+ejecutar en esa base `sql/migraciones/20261127_usuario_ubicacion_opcional.sql`
+desde pgAdmin o psql. La migración permite omitir región, comuna y dirección,
+como el registro actual, sin borrar datos ni ampliar columnas. En bases nuevas,
+las entidades ya definen estos campos como opcionales.
+
 ## Pruebas
 
 Ejecutar `./mvnw.cmd test` con PostgreSQL disponible y `DB_PASSWORD` configurada.

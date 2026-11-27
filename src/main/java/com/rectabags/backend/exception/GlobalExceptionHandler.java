@@ -3,6 +3,7 @@ package com.rectabags.backend.exception;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +16,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> integridad(DataIntegrityViolationException e) {
+        return responder(HttpStatus.BAD_REQUEST,
+                "Los datos no cumplen los límites o las relaciones permitidas. Revisa los valores e inténtalo nuevamente.");
+    }
 
     @ExceptionHandler(NegocioException.class)
     public ResponseEntity<Map<String, String>> negocio(NegocioException e) {

@@ -76,12 +76,12 @@ class CategoriaServiceTest {
 
 
     @Test
-    void eliminar_conProductosActivos_lanzaErrorYNoElimina() {
+    void eliminar_conProductosAsociados_lanzaErrorYNoElimina() {
 
         Categoria categoria = new Categoria(1L, "Mochilas", null);
 
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
-        when(productoRepository.existsByCategoriaIdCategoriaAndActivoTrue(1L)).thenReturn(true);
+        when(productoRepository.existsByCategoriaIdCategoria(1L)).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () -> categoriaService.eliminar(1L));
 
@@ -95,7 +95,7 @@ class CategoriaServiceTest {
         Categoria categoria = new Categoria(1L, "Mochilas", null);
 
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
-        when(productoRepository.existsByCategoriaIdCategoriaAndActivoTrue(1L)).thenReturn(false);
+        when(productoRepository.existsByCategoriaIdCategoria(1L)).thenReturn(false);
 
         categoriaService.eliminar(1L);
 

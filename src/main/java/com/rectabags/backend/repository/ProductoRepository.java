@@ -16,8 +16,8 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     @Query("select p from Producto p where p.idProducto = :id")
     Optional<Producto> buscarParaActualizar(@Param("id") Long id);
 
-    // ¿La categoría tiene productos activos? (para no eliminarla)
-    boolean existsByCategoriaIdCategoriaAndActivoTrue(Long idCategoria);
+    // Incluso los productos inactivos conservan su relación con la categoría.
+    boolean existsByCategoriaIdCategoria(Long idCategoria);
 
     // Todos los productos activos, ordenados por nombre
     List<Producto> findByActivoTrueOrderByNombreAsc();

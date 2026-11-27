@@ -24,6 +24,7 @@ import com.rectabags.backend.security.JwtFilter;
 import com.rectabags.backend.security.JwtUtil;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.DispatcherType;
 
 /*
  * Seguridad DEFINITIVA (reemplaza la temporal del Paso 0).
@@ -66,6 +67,9 @@ public class SecurityConfig {
                         "No tienes permiso para realizar esta acción.")))
 
             .authorizeHttpRequests(auth -> auth
+
+                // Un error interno conserva su estado HTTP; no es un nuevo login.
+                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
 
                 // Swagger
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()

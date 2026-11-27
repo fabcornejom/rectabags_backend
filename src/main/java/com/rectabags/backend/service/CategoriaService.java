@@ -65,9 +65,9 @@ public class CategoriaService {
 
         Categoria categoria = buscarPorId(id);
 
-        if (productoRepository.existsByCategoriaIdCategoriaAndActivoTrue(id)) {
+        if (productoRepository.existsByCategoriaIdCategoria(id)) {
             throw new IllegalArgumentException(
-                    "No se puede eliminar: la categoría tiene productos activos.");
+                    "No se puede eliminar: la categoría tiene productos asociados, incluidos los inactivos.");
         }
 
         categoriaRepository.delete(categoria);
