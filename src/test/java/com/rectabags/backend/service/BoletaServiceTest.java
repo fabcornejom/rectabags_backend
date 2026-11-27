@@ -47,8 +47,8 @@ class BoletaServiceTest {
     void compraCorrectaCalculaTotalesDescuentaStockYGuardaDetallesHistoricos() {
         Producto mochila = producto(1L, "Mochila", "10000.50", 5);
         Producto bolso = producto(2L, "Bolso", "5000.25", 3);
-        when(productos.findById(1L)).thenReturn(Optional.of(mochila));
-        when(productos.findById(2L)).thenReturn(Optional.of(bolso));
+        when(productos.buscarParaActualizar(1L)).thenReturn(Optional.of(mochila));
+        when(productos.buscarParaActualizar(2L)).thenReturn(Optional.of(bolso));
         simularGuardado();
 
         BoletaDTO respuesta = service.crearCompra(compra(
@@ -85,8 +85,8 @@ class BoletaServiceTest {
     void faltaStockEnSegundoProductoNoGuardaNiModificaElPrimero() {
         Producto primero = producto(1L, "Mochila", "10000", 5);
         Producto segundo = producto(2L, "Bolso", "5000", 0);
-        when(productos.findById(1L)).thenReturn(Optional.of(primero));
-        when(productos.findById(2L)).thenReturn(Optional.of(segundo));
+        when(productos.buscarParaActualizar(1L)).thenReturn(Optional.of(primero));
+        when(productos.buscarParaActualizar(2L)).thenReturn(Optional.of(segundo));
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> service.crearCompra(compra(new ItemCompraDTO(1L, 2), new ItemCompraDTO(2L, 1))));
@@ -102,7 +102,7 @@ class BoletaServiceTest {
     void usaPrecioOfertaDeLaBaseDeDatos() {
         Producto producto = producto(1L, "Mochila", "10000.50", 5);
         producto.setPrecioOferta(new BigDecimal("7990.25"));
-        when(productos.findById(1L)).thenReturn(Optional.of(producto));
+        when(productos.buscarParaActualizar(1L)).thenReturn(Optional.of(producto));
         simularGuardado();
 
         BoletaDTO respuesta = service.crearCompra(compra(new ItemCompraDTO(1L, 2)));
@@ -115,7 +115,7 @@ class BoletaServiceTest {
     void productoInactivoEsRechazadoSinGuardar() {
         Producto producto = producto(1L, "Mochila", "10000", 5);
         producto.setActivo(false);
-        when(productos.findById(1L)).thenReturn(Optional.of(producto));
+        when(productos.buscarParaActualizar(1L)).thenReturn(Optional.of(producto));
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> service.crearCompra(compra(new ItemCompraDTO(1L, 1))));
@@ -127,7 +127,7 @@ class BoletaServiceTest {
 
     @Test
     void productoInexistenteEsRechazadoSinGuardar() {
-        when(productos.findById(9L)).thenReturn(Optional.empty());
+        when(productos.buscarParaActualizar(9L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class,
                 () -> service.crearCompra(compra(new ItemCompraDTO(9L, 1))));
@@ -138,7 +138,7 @@ class BoletaServiceTest {
     @Test
     void itemsRepetidosCompruebanElStockDeLaCantidadTotal() {
         Producto producto = producto(1L, "Mochila", "10000", 3);
-        when(productos.findById(1L)).thenReturn(Optional.of(producto));
+        when(productos.buscarParaActualizar(1L)).thenReturn(Optional.of(producto));
 
         assertThrows(IllegalArgumentException.class, () -> service.crearCompra(compra(
                 new ItemCompraDTO(1L, 2), new ItemCompraDTO(1L, 2))));
@@ -181,7 +181,9 @@ class BoletaServiceTest {
         detalle.setNombreProducto("Nombre historico");
         detalle.setPrecioUnidad(new BigDecimal("1000"));
         detalle.setSubTotal(new BigDecimal("2000"));
-        when(boletas.findById(10L)).thenReturn(Optional.of(boleta));
+        when(boletas.buscarParaActualizar(10L)).thenReturn(Optional.of(boleta));
+        when(detalles.productosDeBoleta(10L)).thenReturn(List.of(1L));
+        when(productos.buscarParaActualizar(1L)).thenReturn(Optional.of(producto));
         when(detalles.findByBoletaIdBoletaOrderByIdDetalleBoletaAsc(10L)).thenReturn(List.of(detalle));
 
         BoletaDTO respuesta = service.cambiarEstado(10L, EstadoBoleta.CANCELADA);
@@ -200,7 +202,7 @@ class BoletaServiceTest {
         Boleta boleta = new Boleta();
         boleta.setEstado(EstadoBoleta.PENDIENTE);
         boleta.setFechaCierre(java.time.LocalDateTime.now());
-        when(boletas.findById(10L)).thenReturn(Optional.of(boleta));
+        when(boletas.buscarParaActualizar(10L)).thenReturn(Optional.of(boleta));
         assertThrows(IllegalArgumentException.class, () -> service.cambiarEstado(10L, EstadoBoleta.CANCELADA));
         verifyNoInteractions(productos, detalles);
         verify(boletas, never()).save(any());

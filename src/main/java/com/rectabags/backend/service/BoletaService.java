@@ -55,8 +55,10 @@ public class BoletaService {
         BigDecimal total = BigDecimal.ZERO;
 
         // Se comprueba toda la compra antes de modificar stock o guardar registros.
-        for (Map.Entry<Long, Integer> item : cantidades.entrySet()) {
-            Producto producto = productoRepository.findById(item.getKey())
+        // El orden global de bloqueo evita que dos compras crucen sus productos.
+        for (Map.Entry<Long, Integer> item : cantidades.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()).toList()) {
+            Producto producto = productoRepository.buscarParaActualizar(item.getKey())
                     .orElseThrow(() -> new IllegalArgumentException(
                             "No existe el producto con identificador " + item.getKey() + "."));
 
@@ -128,7 +130,7 @@ public class BoletaService {
 
     @Transactional
     public BoletaDTO cambiarEstado(Long id, EstadoBoleta nuevoEstado) {
-        Boleta boleta = boletaRepository.findById(id)
+        Boleta boleta = boletaRepository.buscarParaActualizar(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Boleta no encontrada."));
         if (boleta.getFechaCierre() != null) {
             throw new IllegalArgumentException("La boleta pertenece a un periodo cerrado.");
@@ -143,8 +145,15 @@ public class BoletaService {
         };
         if (!permitido) throw new IllegalArgumentException("No se permite cambiar de "
                 + boleta.getEstado() + " a " + nuevoEstado + ".");
-        List<DetalleBoleta> detalles = detalleRepository
-                .findByBoletaIdBoletaOrderByIdDetalleBoletaAsc(id);
+        // Bloquear productos antes de cargar los detalles evita conservar stock
+        // antiguo en el contexto JPA mientras otra compra termina su transacción.
+        if (nuevoEstado == EstadoBoleta.CANCELADA) {
+            for (Long idProducto : detalleRepository.productosDeBoleta(id).stream().distinct().sorted().toList()) {
+                productoRepository.buscarParaActualizar(idProducto)
+                        .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado."));
+            }
+        }
+        List<DetalleBoleta> detalles = detalleRepository.findByBoletaIdBoletaOrderByIdDetalleBoletaAsc(id);
         if (nuevoEstado == EstadoBoleta.CANCELADA) {
             List<Producto> productos = new ArrayList<>();
             for (DetalleBoleta detalle : detalles) {

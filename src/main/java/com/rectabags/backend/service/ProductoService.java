@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.rectabags.backend.dto.ProductoRequest;
 import com.rectabags.backend.model.Categoria;
@@ -61,9 +62,11 @@ public class ProductoService {
     }
 
 
+    @Transactional
     public Producto actualizar(Long id, ProductoRequest datos) {
 
-        Producto producto = buscarPorId(id);
+        Producto producto = productoRepository.buscarParaActualizar(id)
+                .orElseThrow(() -> new NoSuchElementException("Producto no encontrado."));
 
         validar(datos);
 
@@ -79,9 +82,11 @@ public class ProductoService {
 
     // Borrado lógico: no se borra de la tabla, solo se desactiva.
     // Así las boletas antiguas siguen funcionando.
+    @Transactional
     public void eliminar(Long id) {
 
-        Producto producto = buscarPorId(id);
+        Producto producto = productoRepository.buscarParaActualizar(id)
+                .orElseThrow(() -> new NoSuchElementException("Producto no encontrado."));
 
         producto.setActivo(false);
         productoRepository.save(producto);

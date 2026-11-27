@@ -122,7 +122,7 @@ class ProductoServiceTest {
         producto.setIdProducto(1L);
         producto.setActivo(true);
 
-        when(productoRepository.findById(1L)).thenReturn(Optional.of(producto));
+        when(productoRepository.buscarParaActualizar(1L)).thenReturn(Optional.of(producto));
 
         productoService.eliminar(1L);
 

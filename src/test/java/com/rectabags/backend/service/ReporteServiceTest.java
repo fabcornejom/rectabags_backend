@@ -42,14 +42,14 @@ class ReporteServiceTest {
         com.rectabags.backend.model.Boleta cerrada = new com.rectabags.backend.model.Boleta();
         LocalDateTime fechaAnterior = LocalDateTime.now().minusDays(1);
         cerrada.setFechaCierre(fechaAnterior);
-        List<com.rectabags.backend.model.Boleta> todas = new java.util.ArrayList<>(abiertas);
-        todas.add(cerrada);
-        when(repositorio.findAllByOrderByFechaEmisionDescIdBoletaDesc()).thenReturn(todas);
+        when(repositorio.abiertasParaCerrar()).thenReturn(abiertas, List.of());
         assertEquals(5, reportes.cerrarPeriodo());
         assertNotNull(abiertas.get(0).getFechaCierre());
         assertTrue(abiertas.stream().allMatch(boleta -> boleta.getFechaCierre().equals(abiertas.get(0).getFechaCierre())));
         assertEquals(fechaAnterior, cerrada.getFechaCierre());
         assertEquals(0, reportes.cerrarPeriodo());
+        verify(repositorio).saveAll(abiertas);
+        verify(repositorio).saveAll(List.of());
     }
 
     @Test

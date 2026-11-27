@@ -31,8 +31,7 @@ public class ReporteService {
 
     @Transactional
     public long cerrarPeriodo() {
-        List<Boleta> abiertas = repositorio.findAllByOrderByFechaEmisionDescIdBoletaDesc().stream()
-                .filter(boleta -> boleta.getFechaCierre() == null).toList();
+        List<Boleta> abiertas = repositorio.abiertasParaCerrar();
         LocalDateTime cierre = LocalDateTime.now();
         abiertas.forEach(boleta -> boleta.setFechaCierre(cierre));
         repositorio.saveAll(abiertas);
